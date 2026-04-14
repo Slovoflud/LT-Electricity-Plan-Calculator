@@ -1,0 +1,616 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>LT Electricity Plan Calculator</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@300;400;500&family=Instrument+Serif:ital@0;1&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0e0f0c;
+    --bg2: #161714;
+    --bg3: #1e1f1b;
+    --border: rgba(255,255,255,0.08);
+    --border2: rgba(255,255,255,0.14);
+    --text: #f0ede6;
+    --muted: #7a7870;
+    --accent: #c8e87a;
+    --accent2: #8bc34a;
+    --danger: #e87a7a;
+    --gold: #e8c87a;
+    --card: #161714;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: 'DM Mono', monospace;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    padding: 0;
+  }
+
+  /* Header */
+  .header {
+    padding: 40px 48px 32px;
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    align-items: flex-end;
+    justify-content: space-between;
+    gap: 24px;
+    flex-wrap: wrap;
+  }
+  .header-left h1 {
+    font-family: 'Instrument Serif', serif;
+    font-size: 38px;
+    font-weight: 400;
+    line-height: 1.1;
+    color: var(--text);
+    letter-spacing: -0.5px;
+  }
+  .header-left h1 em {
+    font-style: italic;
+    color: var(--accent);
+  }
+  .header-left p {
+    margin-top: 8px;
+    font-size: 11px;
+    color: var(--muted);
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+  }
+  .header-right {
+    font-size: 11px;
+    color: var(--muted);
+    text-align: right;
+    line-height: 1.8;
+  }
+
+  /* Layout */
+  .layout {
+    display: grid;
+    grid-template-columns: 320px 1fr;
+    min-height: calc(100vh - 121px);
+  }
+
+  /* Sidebar */
+  .sidebar {
+    border-right: 1px solid var(--border);
+    padding: 32px 28px;
+    display: flex;
+    flex-direction: column;
+    gap: 28px;
+  }
+  .ctrl-group {}
+  .ctrl-label {
+    font-size: 10px;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    color: var(--muted);
+    margin-bottom: 14px;
+    display: block;
+  }
+  .input-row {
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+  }
+  .input-item {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+  .input-item label {
+    font-size: 11px;
+    color: var(--muted);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+  .input-item label span {
+    font-size: 13px;
+    color: var(--accent);
+    font-weight: 500;
+  }
+  input[type=range] {
+    -webkit-appearance: none;
+    width: 100%;
+    height: 2px;
+    background: var(--border2);
+    border-radius: 2px;
+    outline: none;
+    cursor: pointer;
+  }
+  input[type=range]::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    width: 14px;
+    height: 14px;
+    border-radius: 50%;
+    background: var(--accent);
+    cursor: pointer;
+    transition: transform 0.1s;
+  }
+  input[type=range]::-webkit-slider-thumb:hover { transform: scale(1.2); }
+  input[type=number] {
+    background: var(--bg3);
+    border: 1px solid var(--border2);
+    border-radius: 6px;
+    padding: 7px 10px;
+    font-family: 'DM Mono', monospace;
+    font-size: 13px;
+    color: var(--text);
+    width: 100%;
+    outline: none;
+    transition: border-color 0.15s;
+  }
+  input[type=number]:focus { border-color: var(--accent); }
+
+  .divider-h {
+    border: none;
+    border-top: 1px solid var(--border);
+    margin: 0;
+  }
+
+  /* Summary tile */
+  .summary-tile {
+    background: var(--bg3);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 18px;
+  }
+  .summary-tile .stl {
+    font-size: 10px;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    color: var(--muted);
+    margin-bottom: 10px;
+  }
+  .summary-tile .stv {
+    font-size: 28px;
+    color: var(--accent);
+    font-family: 'Instrument Serif', serif;
+    letter-spacing: -0.5px;
+  }
+  .summary-tile .stv span { font-size: 14px; color: var(--muted); }
+  .summary-tile .std {
+    margin-top: 10px;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 6px;
+  }
+  .summary-tile .std-item {
+    font-size: 11px;
+    color: var(--muted);
+    display: flex;
+    justify-content: space-between;
+  }
+  .summary-tile .std-item b { color: var(--text); font-weight: 400; }
+
+  .savings-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    background: rgba(200,232,122,0.1);
+    border: 1px solid rgba(200,232,122,0.25);
+    border-radius: 20px;
+    padding: 4px 10px;
+    font-size: 11px;
+    color: var(--accent);
+    margin-top: 10px;
+  }
+
+  /* Main content */
+  .main {
+    padding: 32px 36px;
+    overflow: auto;
+  }
+  .plans-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 20px;
+  }
+  .plans-header h2 {
+    font-family: 'Instrument Serif', serif;
+    font-size: 22px;
+    font-weight: 400;
+    color: var(--text);
+  }
+  .sort-toggle {
+    display: flex;
+    gap: 2px;
+    background: var(--bg3);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 3px;
+  }
+  .sort-btn {
+    font-family: 'DM Mono', monospace;
+    font-size: 10px;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    padding: 5px 12px;
+    border: none;
+    border-radius: 6px;
+    background: transparent;
+    color: var(--muted);
+    cursor: pointer;
+    transition: all 0.15s;
+  }
+  .sort-btn.active { background: var(--bg2); color: var(--text); }
+
+  /* Plan cards */
+  .plans-grid {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+  .plan-card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 20px 24px;
+    display: grid;
+    grid-template-columns: 180px 1fr auto;
+    gap: 24px;
+    align-items: center;
+    transition: border-color 0.2s, transform 0.15s;
+    position: relative;
+    overflow: hidden;
+  }
+  .plan-card::before {
+    content: '';
+    position: absolute;
+    left: 0; top: 0; bottom: 0;
+    width: 3px;
+    background: transparent;
+    transition: background 0.2s;
+  }
+  .plan-card:hover {
+    border-color: var(--border2);
+    transform: translateX(2px);
+  }
+  .plan-card.rank-1 { border-color: rgba(200,232,122,0.3); }
+  .plan-card.rank-1::before { background: var(--accent); }
+  .plan-card.rank-2::before { background: var(--gold); }
+  .plan-card.rank-3::before { background: #c8a07a; }
+
+  .plan-meta {}
+  .plan-meta .provider {
+    font-size: 10px;
+    text-transform: uppercase;
+    letter-spacing: 0.12em;
+    color: var(--muted);
+    margin-bottom: 4px;
+  }
+  .plan-meta .name {
+    font-size: 14px;
+    color: var(--text);
+    line-height: 1.3;
+  }
+  .plan-meta .duration {
+    margin-top: 6px;
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    font-size: 10px;
+    color: var(--muted);
+    background: var(--bg3);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    padding: 2px 7px;
+  }
+
+  .plan-rates {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 16px;
+  }
+  .rate-item {}
+  .rate-item .rl {
+    font-size: 10px;
+    text-transform: uppercase;
+    letter-spacing: 0.07em;
+    color: var(--muted);
+    margin-bottom: 3px;
+  }
+  .rate-item .rv {
+    font-size: 13px;
+    color: var(--text);
+  }
+  .rate-item .rv.day-cost { color: var(--gold); }
+  .rate-item .rv.night-cost { color: #7ab8e8; }
+  .rate-item .rv.fee-cost { color: var(--muted); }
+
+  .plan-total {}
+  .plan-total .tl {
+    font-size: 10px;
+    text-transform: uppercase;
+    letter-spacing: 0.07em;
+    color: var(--muted);
+    margin-bottom: 4px;
+    text-align: right;
+  }
+  .plan-total .tv {
+    font-family: 'Instrument Serif', serif;
+    font-size: 28px;
+    color: var(--text);
+    text-align: right;
+    letter-spacing: -0.5px;
+  }
+  .plan-total .tv span { font-size: 14px; color: var(--muted); }
+  .plan-total .annual {
+    font-size: 11px;
+    color: var(--muted);
+    text-align: right;
+    margin-top: 2px;
+  }
+  .plan-total .vs-best {
+    font-size: 11px;
+    text-align: right;
+    margin-top: 4px;
+  }
+  .vs-best.over { color: var(--danger); }
+  .vs-best.same { color: var(--accent); font-size: 10px; text-transform: uppercase; letter-spacing: 0.08em; }
+
+  .best-badge {
+    position: absolute;
+    top: 12px;
+    right: 16px;
+    font-size: 9px;
+    text-transform: uppercase;
+    letter-spacing: 0.12em;
+    background: rgba(200,232,122,0.15);
+    color: var(--accent);
+    border: 1px solid rgba(200,232,122,0.3);
+    border-radius: 4px;
+    padding: 2px 7px;
+  }
+
+  /* Notes */
+  .footnote {
+    margin-top: 28px;
+    padding-top: 20px;
+    border-top: 1px solid var(--border);
+    font-size: 11px;
+    color: var(--muted);
+    line-height: 1.8;
+  }
+  .footnote a { color: var(--accent); text-decoration: none; }
+
+  @media (max-width: 900px) {
+    .layout { grid-template-columns: 1fr; }
+    .sidebar { border-right: none; border-bottom: 1px solid var(--border); }
+    .plan-card { grid-template-columns: 1fr 1fr; grid-template-rows: auto auto; }
+    .plan-rates { grid-column: 1/-1; grid-template-columns: repeat(3,1fr); }
+    .plan-total { grid-column: 2; }
+    .header { padding: 28px 24px 24px; }
+    .main { padding: 24px 20px; }
+    .sidebar { padding: 24px 20px; }
+  }
+  @media (max-width: 600px) {
+    .header-left h1 { font-size: 28px; }
+    .plan-card { grid-template-columns: 1fr; }
+    .plan-total { text-align: left; }
+    .plan-total .tl, .plan-total .tv, .plan-total .annual, .plan-total .vs-best { text-align: left; }
+  }
+</style>
+</head>
+<body>
+
+<header class="header">
+  <div class="header-left">
+    <h1>Electricity <em>Plan</em><br>Calculator</h1>
+    <p>Lithuania · Residential · 2025–2026 tariffs</p>
+  </div>
+  <div class="header-right">
+    Night zone: 00:00 – 07:00<br>
+    Day zone: 07:00 – 24:00<br>
+    Prices incl. VAT · excl. ESO persiuntimas
+  </div>
+</header>
+
+<div class="layout">
+  <aside class="sidebar">
+
+    <div class="ctrl-group">
+      <span class="ctrl-label">Monthly consumption</span>
+      <div class="input-row">
+        <div class="input-item">
+          <label>Day usage (kWh) <span id="lbl-day">300</span></label>
+          <input type="range" id="sl-day" min="0" max="2000" step="10" value="300">
+          <input type="number" id="in-day" value="300" min="0" max="9999">
+        </div>
+        <div class="input-item">
+          <label>Night usage (kWh) <span id="lbl-night">700</span></label>
+          <input type="range" id="sl-night" min="0" max="2000" step="10" value="700">
+          <input type="number" id="in-night" value="700" min="0" max="9999">
+        </div>
+      </div>
+    </div>
+
+    <hr class="divider-h">
+
+    <div class="ctrl-group">
+      <span class="ctrl-label">Installed power</span>
+      <div class="input-row">
+        <div class="input-item">
+          <label>Contracted kW <span id="lbl-kw">9</span></label>
+          <input type="range" id="sl-kw" min="1" max="30" step="0.5" value="9">
+        </div>
+      </div>
+    </div>
+
+    <hr class="divider-h">
+
+    <div class="summary-tile">
+      <div class="stl">Best plan — monthly cost</div>
+      <div class="stv" id="sum-best">—</div>
+      <div class="std" id="sum-breakdown"></div>
+      <div class="savings-pill" id="sum-savings" style="display:none">
+        ↓ saves vs worst
+      </div>
+    </div>
+
+  </aside>
+
+  <main class="main">
+    <div class="plans-header">
+      <h2>All plans</h2>
+      <div class="sort-toggle">
+        <button class="sort-btn active" id="btn-price" onclick="setSort('price')">By price</button>
+        <button class="sort-btn" id="btn-provider" onclick="setSort('provider')">By provider</button>
+      </div>
+    </div>
+    <div class="plans-grid" id="plans-out"></div>
+    <div class="footnote">
+      Tariff data sourced from provider comparison (early 2026). Rates may change — verify at
+      <a href="https://skaiciuokle.vert.lt" target="_blank">skaiciuokle.vert.lt</a> (VERT official tool) before signing.<br>
+      Monthly fee: Elektrum/Enefit = fixed base + per-kW charge. Ignitis = flat fee. ESO persiuntimo dedamoji (~€10–14/month for Efektyvus plan) applies equally to all providers and is excluded here.
+    </div>
+  </main>
+</div>
+
+<script>
+const PLANS = [
+  { provider:'Elektrum', name:'Praktiškas', duration:'13 mėn.', day:0.23622, night:0.15029, feeFixed:2, feePerKw:1 },
+  { provider:'Elektrum', name:'Stabilus',   duration:'12 mėn.', day:0.23978, night:0.15387, feeFixed:2, feePerKw:1 },
+  { provider:'Enefit',   name:'Fiksuotas',  duration:'15 mėn.', day:0.24343, night:0.15812, feeFixed:2, feePerKw:2 },
+  { provider:'Enefit',   name:'Fiksuotas',  duration:'24 mėn.', day:0.24414, night:0.15863, feeFixed:2, feePerKw:2 },
+  { provider:'Ignitis',  name:'Optimalus',  duration:'12 mėn.', day:0.277,   night:0.186,   feeFixed:4.90, feePerKw:0 },
+  { provider:'Ignitis',  name:'Optimalus',  duration:'24 mėn.', day:0.281,   night:0.191,   feeFixed:4.90, feePerKw:0 },
+];
+
+let sortMode = 'price';
+
+function getInputs() {
+  const d = parseFloat(document.getElementById('in-day').value) || 0;
+  const n = parseFloat(document.getElementById('in-night').value) || 0;
+  const kw = parseFloat(document.getElementById('sl-kw').value) || 9;
+  return { d, n, kw };
+}
+
+function calcPlan(p, d, n, kw) {
+  const fee = p.feeFixed + p.feePerKw * kw;
+  const dayCost = p.day * d;
+  const nightCost = p.night * n;
+  const total = dayCost + nightCost + fee;
+  return { fee, dayCost, nightCost, total };
+}
+
+function render() {
+  const { d, n, kw } = getInputs();
+  const results = PLANS.map(p => ({ p, ...calcPlan(p, d, n, kw) }));
+
+  let sorted;
+  if (sortMode === 'price') {
+    sorted = [...results].sort((a, b) => a.total - b.total);
+  } else {
+    sorted = [...results].sort((a, b) => a.p.provider.localeCompare(b.p.provider));
+  }
+
+  const minTotal = Math.min(...results.map(r => r.total));
+  const maxTotal = Math.max(...results.map(r => r.total));
+  const bestResult = results.find(r => Math.abs(r.total - minTotal) < 0.001);
+
+  // Update summary
+  document.getElementById('sum-best').innerHTML = `${minTotal.toFixed(2)}<span> €/mo</span>`;
+  document.getElementById('sum-breakdown').innerHTML = `
+    <div class="std-item"><span>Day</span><b>${bestResult.dayCost.toFixed(2)} €</b></div>
+    <div class="std-item"><span>Night</span><b>${bestResult.nightCost.toFixed(2)} €</b></div>
+    <div class="std-item"><span>Fee</span><b>${bestResult.fee.toFixed(2)} €</b></div>
+    <div class="std-item"><span>Annual</span><b>${(minTotal*12).toFixed(0)} €</b></div>
+  `;
+  const savings = maxTotal - minTotal;
+  const savPill = document.getElementById('sum-savings');
+  if (savings > 0.5) {
+    savPill.style.display = 'inline-flex';
+    savPill.textContent = `↓ saves ${savings.toFixed(2)} €/mo vs worst`;
+  } else {
+    savPill.style.display = 'none';
+  }
+
+  // Render cards
+  const html = sorted.map((r, i) => {
+    const isBest = Math.abs(r.total - minTotal) < 0.001;
+    const rank = sortMode === 'price' ? i + 1 : null;
+    const rankClass = rank ? `rank-${rank}` : '';
+    const over = r.total - minTotal;
+    const vsHtml = isBest
+      ? `<div class="vs-best same">Best rate</div>`
+      : `<div class="vs-best over">+${over.toFixed(2)} €/mo · +${(over*12).toFixed(0)} €/yr</div>`;
+
+    return `
+      <div class="plan-card ${rankClass}">
+        ${isBest ? '<div class="best-badge">Best value</div>' : ''}
+        <div class="plan-meta">
+          <div class="provider">${r.p.provider}</div>
+          <div class="name">${r.p.name}</div>
+          <div class="duration">${r.p.duration}</div>
+        </div>
+        <div class="plan-rates">
+          <div class="rate-item">
+            <div class="rl">Day €/kWh</div>
+            <div class="rv day-cost">${r.p.day.toFixed(5)}</div>
+            <div class="rv" style="font-size:11px;color:var(--muted)">${r.dayCost.toFixed(2)} €</div>
+          </div>
+          <div class="rate-item">
+            <div class="rl">Night €/kWh</div>
+            <div class="rv night-cost">${r.p.night.toFixed(5)}</div>
+            <div class="rv" style="font-size:11px;color:var(--muted)">${r.nightCost.toFixed(2)} €</div>
+          </div>
+          <div class="rate-item">
+            <div class="rl">Fixed fee</div>
+            <div class="rv fee-cost">${(r.p.feeFixed + r.p.feePerKw > 0 && r.p.feePerKw > 0) ? r.p.feeFixed + ' + ' + r.p.feePerKw + '×kW' : r.p.feeFixed.toFixed(2)}</div>
+            <div class="rv" style="font-size:11px;color:var(--muted)">${r.fee.toFixed(2)} €</div>
+          </div>
+        </div>
+        <div class="plan-total">
+          <div class="tl">Monthly total</div>
+          <div class="tv">${r.total.toFixed(2)}<span> €</span></div>
+          <div class="annual">${(r.total*12).toFixed(0)} € / year</div>
+          ${vsHtml}
+        </div>
+      </div>`;
+  }).join('');
+
+  document.getElementById('plans-out').innerHTML = html;
+}
+
+function setSort(mode) {
+  sortMode = mode;
+  document.getElementById('btn-price').classList.toggle('active', mode === 'price');
+  document.getElementById('btn-provider').classList.toggle('active', mode === 'provider');
+  render();
+}
+
+// Sync sliders ↔ number inputs
+function linkSlider(slId, inId, lblId) {
+  const sl = document.getElementById(slId);
+  const inp = document.getElementById(inId);
+  const lbl = lblId ? document.getElementById(lblId) : null;
+  sl.addEventListener('input', () => {
+    const v = sl.value;
+    if (inp) inp.value = v;
+    if (lbl) lbl.textContent = parseFloat(v) % 1 === 0 ? v : parseFloat(v).toFixed(1);
+    render();
+  });
+  if (inp) inp.addEventListener('input', () => {
+    const v = inp.value;
+    sl.value = v;
+    if (lbl) lbl.textContent = v;
+    render();
+  });
+}
+
+linkSlider('sl-day', 'in-day', 'lbl-day');
+linkSlider('sl-night', 'in-night', 'lbl-night');
+document.getElementById('sl-kw').addEventListener('input', function() {
+  const v = parseFloat(this.value);
+  document.getElementById('lbl-kw').textContent = v % 1 === 0 ? v : v.toFixed(1);
+  render();
+});
+
+render();
+</script>
+</body>
+</html>
